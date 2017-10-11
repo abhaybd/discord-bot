@@ -7,6 +7,7 @@ def register(_bot):
 with open('reactions.info') as file:
     global emojis
     emojis = file.readlines()
+    emojis = [x.strip() for x in emojis]
 
 with open('server.info') as file:
     global server_id

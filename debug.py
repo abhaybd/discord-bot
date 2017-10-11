@@ -1,14 +1,15 @@
 def register(_bot):
     global bot
     bot = _bot
-    with open('admins.info') as file:
-        nonlocal admins
-        admins = file.readlines()
     bot.admins.extend(admins)
     bot.register_trigger('!ping', ping)
     bot.register_trigger('!shutdown', shutdown)
     bot.register_flow_triggers('!pause', '!resume')
 
+with open('admins.info') as file:
+    global admins
+    admins = file.readlines()
+    admins = [x.strip() for x in admins]
           
 async def ping(client, message):
     tag = get_tag(message)
@@ -23,7 +24,6 @@ async def shutdown(client, message):
         import sys
         sys.stderr.close()
         await client.close()
-        sys.exit(0)
         
 def get_tag(message):
     tag = '{}#{}'.format(message.author.name, message.author.discriminator)

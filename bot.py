@@ -166,6 +166,12 @@ async def on_ready():
     bot.add_activities('with himself', 'hard to get', 'with fire', 'in the superbowl', 'hooky')
     bot.start_activity_rotation()
     bot.debug('Ready!')
+    for server in client.servers:
+        try:
+            await client.send_message(server.default_channel, 'Hello, world!')
+            bot.debug('Sent awake message to default channel of channel: {}'.format(server.name))
+        except:
+            bot.debug('Error sending message to default channel of a server!')
     
 @client.event
 async def on_message(message):
@@ -227,3 +233,4 @@ while not finished:
         finished = True
     except:
         bot.debug('Client crashed! Rebooting now.')
+sys.exit(0)
