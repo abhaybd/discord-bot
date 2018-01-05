@@ -235,12 +235,14 @@ async def call_user_subscribers(message):
         bot.debug('id={} : Called {} user subscriber(s) for user {}'.format(message.id, num_subscribers, key))
         
 async def call_mention_subscribers(message):
-    key = '{}#{}'.format(message.author.name, message.author.discriminator)
-    if key in bot._mention_subscribers:
-        for func in bot._mention_subscribers[key]:
-            await func(client, message)
-        num_subscribers = len(bot._mention_subscribers[key])
-        bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(message.id, num_subscribers, key))
+    for user in message.mentions:
+        key = '{}#{}'.format(user.name, user.discriminator)
+        if key in bot._mention_subscribers:
+            for func in bot._mention_subscribers[key]:
+                await func(client, message)
+            num_subscribers = len(bot._mention_subscribers[key])
+            bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(message.id, num_subscribers, key))
+        
 
 async def call_message_subscribers(message):
     if len(bot._message_subscribers) > 0:
