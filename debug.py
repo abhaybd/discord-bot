@@ -1,12 +1,19 @@
+commands = {'ping' : '!ping',
+            'shutdown' : '!shutdown',
+            'pause' : '!pause',
+            'resume' : '!resume',
+            'commands' : '!commands'}
+
 def register(_bot):
     global bot
     bot = _bot
     bot.admins.extend(admins)
-    bot.register_trigger('!ping', ping)
-    bot.register_trigger('!shutdown', shutdown)
-    bot.register_flow_triggers('!pause', '!resume')
+    bot.register_trigger(commands['ping'], ping)
+    bot.register_trigger(commands['shutdown'], shutdown)
+    bot.register_trigger(commands['commands'], get_commands)
+    bot.register_flow_triggers(commands['pause'], commands['resume'])
 
-with open('admins.info') as file:
+with open('resources/admins.info') as file:
     global admins
     admins = file.readlines()
     admins = [x.strip() for x in admins]
@@ -15,6 +22,12 @@ async def ping(client, message):
     tag = get_tag(message)
     if tag in bot.admins:
         await client.send_message(message.channel, 'Pong!')
+
+async def get_commands(client, message):
+    await client.send_message(message.channel,
+                              'I just DMed you a list of commands. You might not have permissions, though!')
+    dm = '\n'.join(commands.values())
+    await client.send_message(message.author, dm)
     
 async def shutdown(client, message):
     tag = get_tag(message)

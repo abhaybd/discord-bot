@@ -5,9 +5,13 @@ import discord
 import asyncio
 from datetime import datetime
 import sys
+from os.path import exists
+from os import makedirs
 
 # Redirect stderr to error log
-sys.stderr = open('error.log', 'w') 
+if not exists('error_logs'):
+    makedirs('error_logs')
+sys.stderr = open('error_logs/{}.log'.format(datetime.now().strftime('%m-%d-%y_%I-%M')), 'w') 
 
 # Create client object
 client = discord.Client()
@@ -16,6 +20,7 @@ class Bot(object):
     admins = []
     _triggers = {} # key=first word : value=list of funcs to call
     _user_subscribers = {} # key=username#discriminator : value=list of funcs to call
+    _mention_subscribers = {} # key=username#discriminator : value=list of funcs to call
     _message_subscribers = set() # funcs to call
     _pause_triggers = set()
     _resume_triggers = set()
@@ -101,7 +106,27 @@ class Bot(object):
         else:
             self._triggers[trigger] = [func]
         bot.debug('Added trigger subscriber for trigger={}'.format(trigger))
-    
+        
+    def register_mention_subscriber(self, name, discriminator, func):
+        """
+        Registers func to be called when specified user is mentioned
+        
+        Parameters
+        --------------
+        name : str
+            username of user. Name in `name#discriminator`.
+        discriminator : str
+            discriminator of user. Discriminator in `name#discriminator`.
+        func : method
+            func will be called with params `client`, `message`, where `client` is a discord.Client object, and `message` is a discord.Message object
+        """
+        key = '{}#{}'.format(name, discriminator)
+        if key in self._mention_subscribers:
+            self._mention_subscribers[key].append(func)
+        else:
+            self._mention_subscribers[key] = [func]
+        bot.debug('Added mention subscriber for user={}#{}'.format(name, discriminator))
+        
     def register_user_subscriber(self, name, discriminator, func):
         """
         Registers func to be called when user sends any message
@@ -147,13 +172,18 @@ class Bot(object):
 def import_all():
     import os
     from os.path import isfile, dirname, abspath
+    exceptions = {__file__.split('/')[-1], '__init__.py', 'rnn.py', 'josh_memer.py', 'ian_memer.py'}
     for module in os.listdir(dirname(abspath(__file__))):
-        if not isfile(module) or module[-3:] != '.py' or module == '__init__.py' or module == __file__.split('/')[-1]:
+        if not isfile(module) or module[-3:] != '.py' or module in exceptions:
             continue
-        bot.debug('Importing and registering module: {}'.format(module[:-3]))
-        imported = __import__(module[:-3], locals(), globals())
+        module = module[:-3]
+        bot.debug('Importing and registering module: {}'.format(module))
+        imported = __import__(module, locals(), globals())
+        if not hasattr(imported, 'register'):
+            bot.debug('Module {} doesn\'t implement register(bot) method!'.format(module))
+            continue
         imported.register(bot)
-        bot.debug('Done importing and registering module: {}'.format(module[:-3]))
+        bot.debug('Done importing and registering module: {}'.format(module))
     del os, module, isfile, dirname, abspath
     
 
@@ -177,9 +207,10 @@ async def on_ready():
 async def on_message(message):
     await flow_control_triggers(message)
     if not bot.paused:
-        await call_message_subscribers(message)
-        await call_user_subscribers(message)
         await call_trigger_subscribers(message)
+        await call_mention_subscribers(message)
+        await call_user_subscribers(message)
+        await call_message_subscribers(message)
         
 async def flow_control_triggers(message):
     user = '{}#{}'.format(message.author.name, message.author.discriminator)
@@ -202,6 +233,14 @@ async def call_user_subscribers(message):
             await func(client, message)
         num_subscribers = len(bot._user_subscribers[key])
         bot.debug('id={} : Called {} user subscriber(s) for user {}'.format(message.id, num_subscribers, key))
+        
+async def call_mention_subscribers(message):
+    key = '{}#{}'.format(message.author.name, message.author.discriminator)
+    if key in bot._mention_subscribers:
+        for func in bot._mention_subscribers[key]:
+            await func(client, message)
+        num_subscribers = len(bot._mention_subscribers[key])
+        bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(message.id, num_subscribers, key))
 
 async def call_message_subscribers(message):
     if len(bot._message_subscribers) > 0:
@@ -219,18 +258,20 @@ async def call_trigger_subscribers(message):
                 message.id, num_subscribers, trigger))
         
 bot = Bot()
-finished = False
 info = {}
-with open('auth.info') as file:
+with open('resources/auth.info') as file:
     lines = file.readlines()
     for line in lines:
         parts = line.split(' ')
         info[parts[0]] = parts[1]
 
+finished = False
 while not finished:
     try:
         client.run(info['token'])
         finished = True
+    except ConnectionResetError:
+        bot.debug('Encountered ConnectionResetError! Rebooting now.')
     except:
-        bot.debug('Client crashed! Rebooting now.')
+        bot.debug('The client crashed! Rebooting now.')
 sys.exit(0)
