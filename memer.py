@@ -7,6 +7,7 @@ def register(_bot):
     global bot
     bot = _bot
     global users
+    bot.register_trigger(gif_trigger, send_gif)
     bot.debug(users)
     for user_id in users:
         username, discriminator = user_id.split('#')
@@ -19,6 +20,13 @@ with open('resources/memes.info') as file:
 
 global last_id
 last_id = None
+
+gif_trigger = '!ian'
+gif_path = 'resources/dance.gif'
+
+async def send_gif(client, message):
+    bot.debug('Sending gif: {}'.format(gif_path))
+    await client.send_file(message.channel, gif_path)
     
 async def get_message(client, message):
     global last_id
