@@ -199,7 +199,8 @@ async def on_ready():
     bot.debug('---------------------------------------', add_timestamp = False)
     import_all()
     bot.add_activities('with himself', 'hard to get', 'with fire', 'in the superbowl', 'hooky')
-    bot.start_activity_rotation()
+    # This causes it to crash sometimes. Removed for now.
+    # bot.start_activity_rotation()
     bot.debug('Ready!')
     for server in client.servers:
         try:
@@ -272,13 +273,4 @@ with open('resources/auth.info') as file:
         parts = line.split(' ')
         info[parts[0]] = parts[1]
 
-finished = False
-while not finished:
-    try:
-        client.run(info['token'])
-        finished = True
-    except ConnectionResetError:
-        bot.debug('Encountered ConnectionResetError! Rebooting now.')
-    except:
-        bot.debug('The client crashed! Rebooting now.')
-sys.exit(0)
+client.run(info['token'])
