@@ -167,7 +167,7 @@ async def on_ready():
     bot.debug('---------------------------------------', add_timestamp = False)
     import_all()
     bot.debug('Ready!')
-	"""
+    """
     for server in client.servers:
         try:
             await client.send_message(server.default_channel,
@@ -176,7 +176,7 @@ async def on_ready():
         except Exception as e:
             sys.stderr.write('Error sending message to default channel: %s' % str(e))
             bot.debug('Error sending message to default channel of a server!')
-	"""
+    """
 
 @client.event
 async def on_message(message):
