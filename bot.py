@@ -264,6 +264,11 @@ async def call_trigger_subscribers(message):
         num_subscribers = len(bot._triggers[trigger])
         bot.debug('id={} : Called {} trigger subscriber(s) for trigger {}'.format(
                 message.id, num_subscribers, trigger))
+
+def exception_handler(loop, context):
+      bot.debug('Caught an exception!')
+
+client.loop.set_exception_handler(exception_handler)
         
 bot = Bot()
 info = {}
