@@ -3,6 +3,16 @@
 import json
 import random
 
+last_id = None
+
+gif_trigger = '!ian'
+gif_path = 'resources/dance.gif'
+    
+with open('resources/memes.info') as file:
+    global users
+    users = file.read().strip()
+    users = json.loads(users)
+
 def register(_bot):
     global bot
     bot = _bot
@@ -12,17 +22,6 @@ def register(_bot):
     for user_id in users:
         username, discriminator = user_id.split('#')
         bot.register_mention_subscriber(username, discriminator, get_message)
-    
-with open('resources/memes.info') as file:
-    global users
-    users = file.read().strip()
-    users = json.loads(users)
-
-global last_id
-last_id = None
-
-gif_trigger = '!ian'
-gif_path = 'resources/dance.gif'
 
 async def send_gif(client, message):
     bot.debug('Sending gif: {}'.format(gif_path))
