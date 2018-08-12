@@ -2,7 +2,6 @@
 
 # Import libraries
 import discord
-import asyncio
 from datetime import datetime
 import sys
 from os.path import exists
@@ -25,43 +24,12 @@ class Bot(object):
     _pause_triggers = set()
     _resume_triggers = set()
     _activity_rotation = [] # list of str of activities
-    activity_timer = 60 * 20 # seconds to wait until switching activities
     paused = False
     
     def pause(self):
         self.paused = True
     def resume(self):
         self.paused = False
-    
-    def start_activity_rotation(self):
-        """
-        Starts activity rotation, changing activity every `activity_timer` seconds
-        """
-        async def rotation():
-            index = 0
-            while not client.is_closed and len(self._activity_rotation) > 0:
-                await self.change_activity(self._activity_rotation[index])
-                await asyncio.sleep(self.activity_timer)
-                index = (index + 1) % len(self._activity_rotation)
-        # Set loop in background
-        if len(self._activity_rotation) > 0:
-            client.loop.create_task(rotation())
-            bot.debug('Started activity rotation!')
-        else:
-            bot.debug('Tried to start activity rotation but there are no activities in rotation!')
-            
-        
-    async def change_activity(self, activity):
-        """
-        Change activity text for bot
-        
-        Parameters
-        --------------
-        activity : str
-            str to display as activity
-        """
-        bot.debug('Changed activity to {}'.format(activity))
-        await client.change_presence(game=discord.Game(name=activity))
     
     def add_activities(self, *activities):
        """
@@ -177,7 +145,7 @@ class Bot(object):
 def import_all():
     import os
     from os.path import isfile, dirname, abspath
-    exceptions = {__file__.split('/')[-1], '__init__.py', 'rnn.py', 'josh_memer.py', 'ian_memer.py'}
+    exceptions = {__file__.split('/')[-1], '__init__.py'}
     for module in os.listdir(dirname(abspath(__file__))):
         if not isfile(module) or module[-3:] != '.py' or module in exceptions:
             continue
@@ -198,17 +166,18 @@ async def on_ready():
     bot.debug('Logged in as {} : {}'.format(client.user.name, client.user.id))
     bot.debug('---------------------------------------', add_timestamp = False)
     import_all()
-    bot.add_activities('with himself', 'hard to get', 'with fire', 'in the superbowl', 'hooky')
-    # This causes it to crash sometimes. Removed for now.
-    # bot.start_activity_rotation()
     bot.debug('Ready!')
+    """
     for server in client.servers:
         try:
-            await client.send_message(server.default_channel, 'Hello, world!')
+            await client.send_message(server.default_channel,
+                                      'Sorry I\'m such a fucking dick and crash all the fucking time like a fucking bitch!')
             bot.debug('Sent awake message to default channel of channel: {}'.format(server.name))
-        except:
+        except Exception as e:
+            sys.stderr.write('Error sending message to default channel: %s' % str(e))
             bot.debug('Error sending message to default channel of a server!')
-    
+    """
+
 @client.event
 async def on_message(message):
     await flow_control_triggers(message)
