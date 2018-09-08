@@ -4,6 +4,11 @@ commands = {'ping' : '!ping',
             'resume' : '!resume',
             'commands' : '!commands'}
 
+with open('resources/admins.info') as file:
+    global admins
+    admins = file.readlines()
+    admins = [x.strip() for x in admins]
+
 def register(_bot):
     global bot
     bot = _bot
@@ -12,11 +17,6 @@ def register(_bot):
     bot.register_trigger(commands['shutdown'], shutdown)
     bot.register_trigger(commands['commands'], get_commands)
     bot.register_flow_triggers(commands['pause'], commands['resume'])
-
-with open('resources/admins.info') as file:
-    global admins
-    admins = file.readlines()
-    admins = [x.strip() for x in admins]
           
 async def ping(client, message):
     tag = get_tag(message)
