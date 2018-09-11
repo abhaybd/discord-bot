@@ -10,44 +10,48 @@ from os import makedirs
 # Redirect stderr to error log
 if not exists('error_logs'):
     makedirs('error_logs')
-sys.stderr = open('error_logs/{}.log'.format(datetime.now().strftime('%m-%d-%y_%I-%M')), 'w') 
+sys.stderr = open(
+    'error_logs/{}.log'.format(datetime.now().strftime('%m-%d-%y_%I-%M')), 'w')
 
 # Create client object
 client = discord.Client()
 
+
 class Bot(object):
     admins = []
-    _triggers = {} # key=first word : value=list of funcs to call
-    _user_subscribers = {} # key=username#discriminator : value=list of funcs to call
-    _mention_subscribers = {} # key=username#discriminator : value=list of funcs to call
-    _message_subscribers = set() # funcs to call
+    _triggers = {}  # key=first word : value=list of funcs to call
+    _user_subscribers = {}  # key=username#discriminator : value=list of funcs to call
+    _mention_subscribers = {}  # key=username#discriminator : value=list of funcs to call
+    _message_subscribers = set()  # funcs to call
     _pause_triggers = set()
     _resume_triggers = set()
-    _activity_rotation = [] # list of str of activities
+    _activity_rotation = []  # list of str of activities
     paused = False
-    
+
     def pause(self):
         self.paused = True
+
     def resume(self):
         self.paused = False
-    
+
     def add_activities(self, *activities):
-       """
-       Add activities to activity rotation
-       
-       Parameters
-       --------------
-       *activities : tuple of str
-           these str will be appended to the end of the rotation
-       """
-       self._activity_rotation.extend(activities)
-       bot.debug('Added activities to activity rotation for activies={}'.format(str(activities)))
-       
+        """
+        Add activities to activity rotation
+
+        Parameters
+        --------------
+        *activities : tuple of str
+            these str will be appended to the end of the rotation
+        """
+        self._activity_rotation.extend(activities)
+        bot.debug('Added activities to activity rotation for activies={}'.format(
+            str(activities)))
+
     def register_flow_triggers(self, pause, resume):
         """
         Pauses bot when pause is first word of function.
         Resumes bot when resume is first word of function.
-        
+
         Parameters
         ------------
         pause : str
@@ -57,11 +61,11 @@ class Bot(object):
         """
         self._pause_triggers.add(pause)
         self._resume_triggers.add(resume)
-    
+
     def register_trigger(self, trigger, func):
         """
         Registers func to be called when trigger is the first word of a message
-        
+
         Parameters
         ------------
         trigger : str
@@ -74,11 +78,11 @@ class Bot(object):
         else:
             self._triggers[trigger] = [func]
         bot.debug('Added trigger subscriber for trigger={}'.format(trigger))
-        
+
     def register_mention_subscriber(self, name, discriminator, func):
         """
         Registers func to be called when specified user is mentioned
-        
+
         Parameters
         --------------
         name : str
@@ -93,12 +97,13 @@ class Bot(object):
             self._mention_subscribers[key].append(func)
         else:
             self._mention_subscribers[key] = [func]
-        bot.debug('Added mention subscriber for user={}#{}'.format(name, discriminator))
-        
+        bot.debug('Added mention subscriber for user={}#{}'.format(
+            name, discriminator))
+
     def register_user_subscriber(self, name, discriminator, func):
         """
         Registers func to be called when user sends any message
-        
+
         Parameters
         --------------
         name : str
@@ -113,13 +118,13 @@ class Bot(object):
             self._user_subscribers[key].append(func)
         else:
             self._user_subscribers[key] = [func]
-        bot.debug('Added user subscriber for user={}#{}'.format(name, discriminator))
-            
-            
+        bot.debug('Added user subscriber for user={}#{}'.format(
+            name, discriminator))
+
     def register_message_subscriber(self, func):
         """
         Registers func to be called when any message is sent
-        
+
         Parameters
         -------------
         func : method
@@ -127,21 +132,22 @@ class Bot(object):
         """
         self._message_subscribers.add(func)
         bot.debug('Added message subscriber')
-    
-    def debug(self, debug_log, tag = None, add_timestamp = True):
+
+    def debug(self, debug_log, tag=None, add_timestamp=True):
         date = str(datetime.now().replace(microsecond=0))
         message = debug_log
-        
+
         if tag != None:
             padded = tag.ljust(15)
             message = '{} : {}'.format(padded, message)
         if add_timestamp:
-            message = '{} : {}'.format(date, message)  
-        
+            message = '{} : {}'.format(date, message)
+
         print(message)
         with open('debug.log', 'a') as log:
             log.write('{}\n'.format(message))
-    
+
+
 def import_all():
     import os
     from os.path import isfile, dirname, abspath
@@ -153,18 +159,19 @@ def import_all():
         bot.debug('Importing and registering module: {}'.format(module))
         imported = __import__(module, locals(), globals())
         if not hasattr(imported, 'register'):
-            bot.debug('Module {} doesn\'t implement register(bot) method!'.format(module))
+            bot.debug(
+                'Module {} doesn\'t implement register(bot) method!'.format(module))
             continue
         imported.register(bot)
         bot.debug('Done importing and registering module: {}'.format(module))
     del os, module, isfile, dirname, abspath
-    
+
 
 @client.event
 async def on_ready():
-    bot.debug('', add_timestamp = False)
+    bot.debug('', add_timestamp=False)
     bot.debug('Logged in as {} : {}'.format(client.user.name, client.user.id))
-    bot.debug('---------------------------------------', add_timestamp = False)
+    bot.debug('---------------------------------------', add_timestamp=False)
     import_all()
     bot.debug('Ready!')
     """
@@ -178,6 +185,7 @@ async def on_ready():
             bot.debug('Error sending message to default channel of a server!')
     """
 
+
 @client.event
 async def on_message(message):
     await flow_control_triggers(message)
@@ -186,7 +194,8 @@ async def on_message(message):
         await call_mention_subscribers(message)
         await call_user_subscribers(message)
         await call_message_subscribers(message)
-        
+
+
 async def flow_control_triggers(message):
     user = '{}#{}'.format(message.author.name, message.author.discriminator)
     if user not in bot.admins:
@@ -200,15 +209,18 @@ async def flow_control_triggers(message):
         bot.debug('id={} : Pause called by admin {}'.format(message.id, user))
         await client.send_message(message.channel, 'I\'m going to sleep now.')
         bot.pause()
-    
+
+
 async def call_user_subscribers(message):
     key = '{}#{}'.format(message.author.name, message.author.discriminator)
     if key in bot._user_subscribers:
         for func in bot._user_subscribers[key]:
             await func(client, message)
         num_subscribers = len(bot._user_subscribers[key])
-        bot.debug('id={} : Called {} user subscriber(s) for user {}'.format(message.id, num_subscribers, key))
-        
+        bot.debug('id={} : Called {} user subscriber(s) for user {}'.format(
+            message.id, num_subscribers, key))
+
+
 async def call_mention_subscribers(message):
     for user in message.mentions:
         key = '{}#{}'.format(user.name, user.discriminator)
@@ -216,14 +228,17 @@ async def call_mention_subscribers(message):
             for func in bot._mention_subscribers[key]:
                 await func(client, message)
             num_subscribers = len(bot._mention_subscribers[key])
-            bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(message.id, num_subscribers, key))
-        
+            bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(
+                message.id, num_subscribers, key))
+
 
 async def call_message_subscribers(message):
     if len(bot._message_subscribers) > 0:
         for sub in bot._message_subscribers:
             await sub(client, message)
-        bot.debug('id={} : Called {} message subscriber(s)!'.format(message.id, len(bot._message_subscribers)))
+        bot.debug('id={} : Called {} message subscriber(s)!'.format(
+            message.id, len(bot._message_subscribers)))
+
 
 async def call_trigger_subscribers(message):
     trigger = message.content.strip().split(' ')[0]
@@ -232,13 +247,15 @@ async def call_trigger_subscribers(message):
             await func(client, message)
         num_subscribers = len(bot._triggers[trigger])
         bot.debug('id={} : Called {} trigger subscriber(s) for trigger {}'.format(
-                message.id, num_subscribers, trigger))
+            message.id, num_subscribers, trigger))
+
 
 def exception_handler(loop, context):
-      bot.debug('Caught an exception!')
+    bot.debug('Caught an exception!')
+
 
 client.loop.set_exception_handler(exception_handler)
-        
+
 bot = Bot()
 info = {}
 with open('resources/auth.info') as file:
