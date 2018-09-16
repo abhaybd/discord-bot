@@ -136,14 +136,14 @@ class Bot(object):
     def debug(self, debug_log, add_timestamp=True):
         """
         Prints to the debug file and console.
-        
+
         Parameters
         ----------
         debug_log : str
             Text to print
         add_timestamp : bool, optional
             Whether or not to add timestamp to logging (the default is True, which will add the timestamp)
-        
+
         """
 
         date = str(datetime.now().replace(microsecond=0))
@@ -183,16 +183,6 @@ async def on_ready():
     bot.debug('---------------------------------------', add_timestamp=False)
     import_all()
     bot.debug('Ready!')
-    """
-    for server in client.servers:
-        try:
-            await client.send_message(server.default_channel,
-                                      'Sorry I\'m such a fucking dick and crash all the fucking time like a fucking bitch!')
-            bot.debug('Sent awake message to default channel of channel: {}'.format(server.name))
-        except Exception as e:
-            sys.stderr.write('Error sending message to default channel: %s' % str(e))
-            bot.debug('Error sending message to default channel of a server!')
-    """
 
 
 @client.event
