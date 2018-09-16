@@ -133,13 +133,22 @@ class Bot(object):
         self._message_subscribers.add(func)
         bot.debug('Added message subscriber')
 
-    def debug(self, debug_log, tag=None, add_timestamp=True):
+    def debug(self, debug_log, add_timestamp=True):
+        """
+        Prints to the debug file and console.
+        
+        Parameters
+        ----------
+        debug_log : str
+            Text to print
+        add_timestamp : bool, optional
+            Whether or not to add timestamp to logging (the default is True, which will add the timestamp)
+        
+        """
+
         date = str(datetime.now().replace(microsecond=0))
         message = debug_log
 
-        if tag != None:
-            padded = tag.ljust(15)
-            message = '{} : {}'.format(padded, message)
         if add_timestamp:
             message = '{} : {}'.format(date, message)
 
