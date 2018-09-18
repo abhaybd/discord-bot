@@ -22,8 +22,8 @@ def register(_bot):
     bot = _bot
     global users
 
-    for trigger, path in gif_info:
-        bot.register_trigger(trigger, create_gif_sender(path))
+    for trigger in gif_info:
+        bot.register_trigger(trigger, create_gif_sender(gif_info[trigger]))
 
     bot.register_trigger(config_cooldown_trigger, config_cooldown)
     bot.debug(users)
