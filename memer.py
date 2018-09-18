@@ -4,34 +4,38 @@ import json
 import random
 import time
 
-last_id = None
-
-gif_trigger = '!ian'
-gif_path = 'resources/dance.gif'
+last_id = None # Prevent replying to duplicate messages
 
 config_cooldown_trigger = '!cooldown'
 last_mention = {}
 mention_cooldown = 5 # Won't meme again if mentioned multiple times within timespan
     
 with open('resources/memes.info') as file:
-    global users
     users = file.read().strip()
     users = json.loads(users)
+
+with open('resources/gif_memes.info') as file:
+    gif_info = json.loads(file.read().strip())
 
 def register(_bot):
     global bot
     bot = _bot
     global users
-    bot.register_trigger(gif_trigger, send_gif)
+
+    for trigger, path in gif_info:
+        bot.register_trigger(trigger, create_gif_sender(path))
+
     bot.register_trigger(config_cooldown_trigger, config_cooldown)
     bot.debug(users)
     for user_id in users:
         username, discriminator = user_id.split('#')
         bot.register_mention_subscriber(username, discriminator, get_message)
 
-async def send_gif(client, message):
-    bot.debug('Sending gif: {}'.format(gif_path))
-    await client.send_file(message.channel, gif_path)
+def create_gif_sender(path):
+    async def sender(client, message):
+        bot.debug('Sending gif: {}'.format(path))
+        await client.send_file(message.channel, path)
+    return sender
     
 async def get_message(client, message):
     global last_id
