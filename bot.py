@@ -214,7 +214,10 @@ async def call_user_subscribers(message):
     key = '{}#{}'.format(message.author.name, message.author.discriminator)
     if key in bot._user_subscribers:
         for func in bot._user_subscribers[key]:
-            await func(client, message)
+            try:
+                await func(client, message)
+            except Exception as e:
+                bot.debug('Caught exception during execution of callback: {}'.format(str(e)))
         num_subscribers = len(bot._user_subscribers[key])
         bot.debug('id={} : Called {} user subscriber(s) for user {}'.format(
             message.id, num_subscribers, key))
@@ -225,7 +228,10 @@ async def call_mention_subscribers(message):
         key = '{}#{}'.format(user.name, user.discriminator)
         if key in bot._mention_subscribers:
             for func in bot._mention_subscribers[key]:
-                await func(client, message)
+                try:
+                    await func(client, message)
+                except Exception as e:
+                    bot.debug('Caught exception during execution of callback: {}'.format(str(e)))
             num_subscribers = len(bot._mention_subscribers[key])
             bot.debug('id={} : Called {} mention subscriber(s) for user {}'.format(
                 message.id, num_subscribers, key))
@@ -234,7 +240,10 @@ async def call_mention_subscribers(message):
 async def call_message_subscribers(message):
     if len(bot._message_subscribers) > 0:
         for sub in bot._message_subscribers:
-            await sub(client, message)
+            try:
+                await sub(client, message)
+            except Exception as e:
+                bot.debug('Caught exception during execution of callback: {}'.format(str(e)))
         bot.debug('id={} : Called {} message subscriber(s)!'.format(
             message.id, len(bot._message_subscribers)))
 
@@ -243,7 +252,10 @@ async def call_trigger_subscribers(message):
     trigger = message.content.strip().split(' ')[0]
     if trigger in bot._triggers:
         for func in bot._triggers[trigger]:
-            await func(client, message)
+            try:
+                await func(client, message)
+            except Exception as e:
+                bot.debug('Caught exception during execution of callback: {}'.format(str(e)))
         num_subscribers = len(bot._triggers[trigger])
         bot.debug('id={} : Called {} trigger subscriber(s) for trigger {}'.format(
             message.id, num_subscribers, trigger))
